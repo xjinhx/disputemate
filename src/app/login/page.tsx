@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { isConfigured } from "@/lib/env";
-import { signIn, signUp } from "@/app/actions/auth";
+import { signIn, signUp, tryAsGuest } from "@/app/actions/auth";
 import { Notice } from "@/components/ui";
 
 export const metadata = { title: "Sign in" };
@@ -27,12 +27,20 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       {sp.error && <Notice tone="error">{String(sp.error)}</Notice>}
       {sp.notice === "check_email" && <Notice tone="ok">Check your email to confirm your account, then sign in.</Notice>}
 
+      <form action={tryAsGuest} className="mb-5">
+        <button className="btn-primary w-full">Try it now, no sign-up</button>
+        <p className="mt-2 text-center text-xs text-ink-3">Opens a guest account with sample transactions.</p>
+      </form>
+      <div className="mb-5 flex items-center gap-3 text-xs text-ink-3">
+        <span className="h-px flex-1 bg-line" /> or {signup ? "create an account" : "sign in"} <span className="h-px flex-1 bg-line" />
+      </div>
+
       <form action={signup ? signUp : signIn} className="space-y-3">
         <input type="hidden" name="next" value={next} />
         {signup && (
           <div>
             <label className="label" htmlFor="name">Name</label>
-            <input id="name" name="name" className="input" autoComplete="name" required />
+            <input id="name" name="name" className="input" autoComplete="name" />
           </div>
         )}
         <div>
@@ -41,7 +49,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </div>
         <div>
           <label className="label" htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" className="input" autoComplete={signup ? "new-password" : "current-password"} minLength={signup ? 8 : undefined} required />
+          <input id="password" name="password" type="password" className="input" autoComplete={signup ? "new-password" : "current-password"} minLength={signup ? 6 : undefined} required />
         </div>
         <button className="btn-primary w-full">{signup ? "Create account" : "Sign in"}</button>
       </form>

@@ -28,20 +28,40 @@ export async function signIn(formData: FormData) {
   redirect(safeNext(formData.get("next")) ?? homeFor(role));
 }
 
+/**
+ * Creates an already-confirmed account with the service role, so Supabase
+ * sends no confirmation email (and its email rate limit never applies), then
+ * signs the user straight in.
+ */
+async function createAndSignIn(email: string, password: string, name: string, errorPath: string) {
+  const { error: createError } = await createAdminClient().auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { name },
+  });
+  if (createError) redirect(errorPath + encodeURIComponent(createError.message));
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) redirect(errorPath + encodeURIComponent(error.message));
+}
+
 export async function signUp(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
-  if (password.length < 8) redirect("/login?mode=signup&error=" + encodeURIComponent("Use at least 8 characters for your password."));
-  const supabase = await createClient();
-  const site = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { name }, emailRedirectTo: `${site}/auth/callback` },
-  });
-  if (error) redirect("/login?mode=signup&error=" + encodeURIComponent(error.message));
-  if (!data.session) redirect("/login?notice=check_email");
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80) || email.split("@")[0];
+  if (password.length < 6) redirect("/login?mode=signup&error=" + encodeURIComponent("Use at least 6 characters for your password."));
+  await createAndSignIn(email, password, name, "/login?mode=signup&error=");
+  redirect("/app");
+}
+
+/** One-click guest access: a throwaway customer account with sample data. */
+export async function tryAsGuest() {
+  const id = crypto.randomUUID();
+  const email = `guest-${id.slice(0, 12)}@guest.disputemate.app`;
+  const password = crypto.randomUUID() + crypto.randomUUID();
+  await createAndSignIn(email, password, "Guest", "/login?error=");
   redirect("/app");
 }
 
