@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-ink: #0e1b1c;
+  --color-ink-2: #3d4b4c;
+  --color-ink-3: #6b7778;
+  --color-paper: #f6f4ef;
+  --color-card: #ffffff;
+  --color-line: #e3e0d8;
+  --color-brand: #0f3d3e;
+  --color-brand-2: #1d6b6c;
+  --color-brand-soft: #e3efec;
+  --color-accent: #e8a33d;
+  --color-accent-soft: #fbf0dc;
+  --color-danger: #b3362b;
+  --color-danger-soft: #f8e4e1;
+  --color-ok: #2e7d4f;
+  --color-ok-soft: #e1f1e6;
+  --color-ai: #5b4bb7;
+  --color-ai-soft: #ecebf8;
+  --font-sans: ui-sans-serif, -apple-system, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 bg-brand text-white hover:bg-brand-2;
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 border border-line bg-card text-ink hover:bg-paper;
+}
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 bg-danger text-white hover:opacity-90;
+}
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 text-brand-2 hover:bg-brand-soft;
+}
+.input {
+  @apply w-full rounded-xl border border-line bg-card px-3 py-2.5 text-sm outline-none focus:border-brand-2 focus:ring-2 focus:ring-brand-soft;
+}
+.label {
+  @apply mb-1 block text-sm font-medium text-ink-2;
+}
+.card {
+  @apply rounded-2xl border border-line bg-card;
 }
