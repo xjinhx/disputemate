@@ -50,7 +50,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
         <Stat label="Template fallbacks" value={ds.filter((d) => d.ai_summary_source === "template").length} />
         <Stat label="Alerts dismissed" value={alertsTotal ? `${Math.round(((alertsDismissed ?? 0) / alertsTotal) * 100)}%` : "n/a"} />
         <Stat label="Needs more info" value={ds.length ? `${Math.round((info / ds.length) * 100)}%` : "n/a"} />
-        <Stat label="AI configured" value={process.env.ANTHROPIC_API_KEY ? "Yes" : "No"} tone={process.env.ANTHROPIC_API_KEY ? undefined : "danger"} />
+        <Stat label="AI configured" value={process.env.OPENAI_API_KEY ? "Yes" : "No"} tone={process.env.OPENAI_API_KEY ? undefined : "danger"} />
       </div>
 
       <SectionTitle>Detection rules</SectionTitle>

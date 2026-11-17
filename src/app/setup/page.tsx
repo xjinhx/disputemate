@@ -8,7 +8,7 @@ export default async function SetupPage() {
   const checks = [
     ["NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY", isConfigured()],
     ["SUPABASE_SERVICE_ROLE_KEY (server only)", Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)],
-    ["ANTHROPIC_API_KEY (optional, enables AI features)", Boolean(process.env.ANTHROPIC_API_KEY)],
+    ["OPENAI_API_KEY (optional, enables AI features)", Boolean(process.env.OPENAI_API_KEY)],
   ] as const;
   return (
     <main className="mx-auto w-full max-w-lg px-6 py-12">

@@ -35,7 +35,7 @@ Using a separate Supabase project for previews is recommended once real testers 
    | `NEXT_PUBLIC_SUPABASE_URL` | ✓ | ✓ | ✓ | Public |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✓ | ✓ | ✓ | Public, RLS protected |
    | `SUPABASE_SERVICE_ROLE_KEY` | ✓ | ✓ | ✓ | **Sensitive**, server only |
-   | `ANTHROPIC_API_KEY` | ✓ | ✓ | optional | **Sensitive**, enables AI |
+   | `OPENAI_API_KEY` | ✓ | ✓ | optional | **Sensitive**, enables AI |
    | `NEXT_PUBLIC_SITE_URL` | ✓ | | | Production URL, for auth emails |
 
    Never set `DEMO_PASSWORD` in Vercel.

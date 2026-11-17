@@ -12,7 +12,7 @@ Customers spot disputable transactions, prepare a dispute with AI help, submit i
 |---|---|
 | App | Next.js 16 (App Router, Server Components, Server Actions), TypeScript, Tailwind CSS 4 |
 | Data, auth, files | Supabase (Postgres with row level security, Supabase Auth, private Storage bucket) |
-| AI | Anthropic Claude via `@anthropic-ai/sdk`, structured outputs, optional |
+| AI | OpenAI via the `openai` SDK (Responses API, structured outputs), optional |
 | Hosting | Vercel (production from `main`, previews for branches and PRs) |
 | Tests | Vitest (deterministic domain logic), GitHub Actions CI |
 
@@ -48,7 +48,7 @@ src/
   lib/
     domain/         deterministic business rules (tested)
     supabase/       server, admin and proxy clients
-    ai.ts           Claude integration with safety rules
+    ai.ts           OpenAI integration with safety rules
   proxy.ts          session refresh and route protection
 supabase/migrations schema, RLS, triggers, reference data
 scripts/seed.ts     demo accounts and a sample case
@@ -104,7 +104,7 @@ Every new sign-up gets 12 sample transactions, including a duplicate charge pair
 ## Security notes
 
 - `.env*` files are git-ignored. Only `.env.example` is committed.
-- `SUPABASE_SERVICE_ROLE_KEY` and `ANTHROPIC_API_KEY` are server-only and never reach the browser.
+- `SUPABASE_SERVICE_ROLE_KEY` and `OPENAI_API_KEY` are server-only and never reach the browser.
 - Customers have read-only RLS access to their own rows. All writes go through server actions that check ownership and role first.
 - Evidence lives in a private bucket and is served through 10-minute signed URLs.
 - Uploaded documents are treated as untrusted input in AI prompts.
