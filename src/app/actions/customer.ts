@@ -12,6 +12,7 @@ import { BUCKET, safeFileName, validateUpload } from "@/lib/evidence";
 import { customerCanEdit } from "@/lib/domain/status";
 import {
   CATEGORY_QUESTIONS,
+  descriptionFromAlert,
   detectScamIndicators,
   templateSummary,
   validateForSubmission,
@@ -63,11 +64,18 @@ export async function startDispute(formData: FormData) {
 
   let category: DisputeCategoryKey | null = null;
   let related: string | null = null;
+  let description = "";
   if (alertId) {
     const { data: alert } = await admin.from("dispute_alerts").select("*").eq("alert_id", alertId).single();
     if (alert && alert.user_id === user.user_id) {
       category = alert.alert_type === "duplicate" ? "duplicate" : alert.alert_type === "failed_debited" ? "failed_debited" : "unauthorised";
       related = alert.related_transaction_id;
+      if (alert.alert_type === "duplicate" || alert.alert_type === "failed_debited") {
+        const { data: rel } = related
+          ? await admin.from("transactions").select("transaction_date").eq("transaction_id", related).eq("user_id", user.user_id).maybeSingle()
+          : { data: null };
+        description = descriptionFromAlert(alert.alert_type, txn, rel);
+      }
       await admin.from("dispute_alerts").update({ status: "confirmed", resolved_at: new Date().toISOString() }).eq("alert_id", alertId);
     }
   }
@@ -75,7 +83,7 @@ export async function startDispute(formData: FormData) {
 
   const { data: created, error } = await admin
     .from("disputes")
-    .insert({ user_id: user.user_id, transaction_id: transactionId, related_transaction_id: related, dispute_category: category })
+    .insert({ user_id: user.user_id, transaction_id: transactionId, related_transaction_id: related, dispute_category: category, customer_description: description })
     .select("dispute_id")
     .single();
   if (error || !created) {

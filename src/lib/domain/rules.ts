@@ -102,6 +102,25 @@ export function validateForSubmission(
 }
 
 // ---------------------------------------------------------------------------
+// Starting sentence for a dispute that began from a detection alert. Plain
+// deterministic text from known facts (no AI); the customer can edit it.
+// ---------------------------------------------------------------------------
+export function descriptionFromAlert(
+  alertType: "duplicate" | "failed_debited",
+  txn: Pick<Transaction, "merchant_name" | "amount" | "currency" | "transaction_date" | "payment_method">,
+  related: Pick<Transaction, "transaction_date"> | null,
+): string {
+  const amount = `${txn.currency} ${Number(txn.amount).toFixed(2)}`;
+  if (alertType === "duplicate") {
+    const mins = related
+      ? Math.max(1, Math.round(Math.abs(+new Date(txn.transaction_date) - +new Date(related.transaction_date)) / 60_000))
+      : null;
+    return `I was charged ${amount} twice at ${txn.merchant_name}${mins ? `, ${mins} minute${mins === 1 ? "" : "s"} apart` : ""}. I only made one purchase.`;
+  }
+  return `My ${txn.payment_method.toUpperCase()} transfer of ${amount} (${txn.merchant_name}) was marked as failed, but the money was still taken from my account.`;
+}
+
+// ---------------------------------------------------------------------------
 // Submission reference (FR-09)
 // ---------------------------------------------------------------------------
 export function generateSubmissionReference(now = new Date(), random = Math.random): string {

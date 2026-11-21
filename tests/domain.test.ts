@@ -3,6 +3,7 @@ import { detectDuplicates, detectFailedDebits, runDetection } from "../src/lib/d
 import { addWindow, routeDispute } from "../src/lib/domain/routing";
 import { allowedActions, assertTransition, TransitionError } from "../src/lib/domain/status";
 import {
+  descriptionFromAlert,
   detectScamIndicators,
   generateSubmissionReference,
   templateSummary,
@@ -198,5 +199,14 @@ describe("rules", () => {
     expect(s.customer_explanation).toBe("Charged twice");
     expect(s.missing_information).toEqual(["At least one supporting document"]);
     expect(s.transaction_details).toContain(t.reference_number);
+  });
+
+  it("pre-fills a plain description from a detection alert", () => {
+    const a = tx({ merchant_name: "ABC Store", amount: 85, transaction_date: "2026-11-05T10:05:00Z" });
+    const b = tx({ transaction_date: "2026-11-05T10:00:00Z" });
+    expect(descriptionFromAlert("duplicate", a, b)).toBe("I was charged SGD 85.00 twice at ABC Store, 5 minutes apart. I only made one purchase.");
+    const f = tx({ merchant_name: "Transfer to Tan Wei Ming", amount: 250, payment_method: "fast", transaction_status: "failed" });
+    expect(descriptionFromAlert("failed_debited", f, null)).toContain("FAST transfer of SGD 250.00");
+    expect(descriptionFromAlert("failed_debited", f, null).length).toBeGreaterThanOrEqual(20);
   });
 });
