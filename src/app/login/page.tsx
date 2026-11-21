@@ -8,9 +8,9 @@ import { Notice } from "@/components/ui";
 export const metadata = { title: "Choose a profile" };
 
 const PROFILES = [
-  { role: "customer", name: "Tan Mei Ling", title: "Customer", blurb: "Spot a problem, prepare a dispute with AI help, track it." },
-  { role: "reviewer", name: "Rahul Nair", title: "Bank reviewer", blurb: "Work the queue, approve, reject or request more info." },
-  { role: "administrator", name: "Siti Rahman", title: "Administrator", blurb: "Routing rules, categories, users, AI monitoring, audit log." },
+  { role: "customer", name: "He Jinhong", title: "Customer", blurb: "Spot a problem, prepare a dispute with AI help, track it." },
+  { role: "reviewer", name: "Calvin Ang", title: "Bank reviewer", blurb: "Work the queue, approve, reject or request more info." },
+  { role: "administrator", name: "Domnick Jerom", title: "Administrator", blurb: "Routing rules, categories, users, AI monitoring, audit log." },
 ] as const;
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {

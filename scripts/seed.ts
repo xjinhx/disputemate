@@ -24,9 +24,9 @@ if (!password || password.length < 10) throw new Error("Set DEMO_PASSWORD (at le
 const db = createClient(url, key, { auth: { persistSession: false } });
 
 const accounts = [
-  { email: `customer@${domain}`, name: "Tan Mei Ling", role: "customer" },
-  { email: `reviewer@${domain}`, name: "Rahul Nair", role: "reviewer" },
-  { email: `admin@${domain}`, name: "Siti Rahman", role: "administrator" },
+  { email: `customer@${domain}`, name: "He Jinhong", role: "customer" },
+  { email: `reviewer@${domain}`, name: "Calvin Ang", role: "reviewer" },
+  { email: `admin@${domain}`, name: "Domnick Jerom", role: "administrator" },
 ] as const;
 
 async function ensureUser(a: (typeof accounts)[number]) {

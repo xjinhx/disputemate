@@ -67,9 +67,9 @@ export async function tryAsGuest() {
 
 /** Demo profiles anyone can switch to from the login page. Prototype only. */
 const PROFILES = {
-  customer: { local: "customer", name: "Tan Mei Ling" },
-  reviewer: { local: "reviewer", name: "Rahul Nair" },
-  administrator: { local: "admin", name: "Siti Rahman" },
+  customer: { local: "customer", name: "He Jinhong" },
+  reviewer: { local: "reviewer", name: "Calvin Ang" },
+  administrator: { local: "admin", name: "Domnick Jerom" },
 } as const satisfies Record<UserRole, { local: string; name: string }>;
 
 /**
@@ -103,10 +103,15 @@ export async function signInAsProfile(formData: FormData) {
   const { data, error } = await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
   if (error || !data.user) redirect("/login?error=" + encodeURIComponent(error?.message ?? "Sign-in failed"));
 
+  const userId = data.user.id;
   try {
-    await audit(admin, data.user.id, "auth.sign_in", "user", data.user.id);
+    await Promise.all([
+      // Keep the profile's display name in sync with PROFILES (renames apply on next sign-in).
+      admin.from("users").update({ name: profile.name }).eq("user_id", userId).neq("name", profile.name),
+      audit(admin, userId, "auth.sign_in", "user", userId),
+    ]);
   } catch {
-    /* audit is best-effort */
+    /* name sync and audit are best-effort */
   }
   redirect(homeFor(role));
 }
