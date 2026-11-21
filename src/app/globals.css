@@ -28,6 +28,25 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Tailwind 4 resets buttons to the default cursor; show a pointer on anything clickable. */
+@layer base {
+  button:not(:disabled),
+  [role="button"],
+  a[href],
+  select,
+  summary,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="file"]::file-selector-button,
+  label:has(input[type="checkbox"], input[type="radio"]) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
 }
