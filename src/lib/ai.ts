@@ -61,8 +61,12 @@ async function logRequest(
   });
 }
 
+/** Singapore time in plain words, so the AI never repeats raw UTC timestamps. */
+const sgDate = (iso: string) =>
+  new Date(iso).toLocaleString("en-SG", { timeZone: "Asia/Singapore", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+
 const fmtTxn = (t: Transaction) =>
-  `merchant=${t.merchant_name}; amount=${t.currency} ${Number(t.amount).toFixed(2)}; date=${t.transaction_date}; method=${t.payment_method}; status=${t.transaction_status}; reference=${t.reference_number}`;
+  `merchant=${t.merchant_name}; amount=${t.currency} ${Number(t.amount).toFixed(2)}; date=${sgDate(t.transaction_date)} (Singapore time); method=${t.payment_method}; status=${t.transaction_status}; reference=${t.reference_number}`;
 
 // ---------------------------------------------------------------------------
 // Category recommendation (FR-04)
@@ -220,7 +224,7 @@ Evidence uploaded:
 ${input.evidence.length ? input.evidence.map((e) => `- ${e.file_name}: ${e.ai_summary ?? "(not processed)"}; customer note: ${e.customer_description || "none"}`).join("\n") : "- none"}
 Mandatory fields the system has detected as missing: ${input.missingFields.join(", ") || "none"}
 
-Fill every field. evidence_summary lists each supporting fact and where it came from ("Bank record:" or "Upload <file name>:"). missing_information must include the system-detected missing fields plus anything else a reviewer would reasonably need. recommended_filing_reason is a recommendation only. Do not include amounts, dates or references that are not in the input.`,
+Fill every field. Keep it short and plain: one sentence per field, no more than 3 items in any list, each item under 20 words. Do not repeat reference numbers or exact times; use dates like "18 Nov 2026" and amounts like "S$85.00". evidence_summary lists each supporting fact and where it came from ("Bank record:" or "Receipt:"). missing_information must include the system-detected missing fields plus anything else a reviewer would reasonably need. recommended_filing_reason is a recommendation only. Do not include amounts, dates or references that are not in the input.`,
         },
       ],
       text: { format: zodTextFormat(SummarySchema, "dispute_summary") },

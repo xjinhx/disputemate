@@ -148,9 +148,12 @@ export function templateSummary(
   const fmt = (t: Transaction) =>
     `${t.merchant_name}, ${t.currency} ${Number(t.amount).toFixed(2)}, ${new Date(t.transaction_date).toLocaleString("en-SG", { timeZone: "Asia/Singapore" })} (ref ${t.reference_number})`;
 
-  const evidenceLines = evidence.map((e) => `Customer upload: ${e.file_name}${e.customer_description ? ` (${e.customer_description})` : ""}`);
-  if (related) evidenceLines.unshift(`Transaction record: matching charge ${fmt(related)}`);
-  evidenceLines.unshift(`Transaction record: ${fmt(txn)}`);
+  // Short, plain lines for the customer view; the full record (with reference) stays in transaction_details.
+  const short = (t: Transaction) =>
+    `${t.merchant_name}, ${t.currency} ${Number(t.amount).toFixed(2)}, ${new Date(t.transaction_date).toLocaleString("en-SG", { timeZone: "Asia/Singapore", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}`;
+  const evidenceLines = evidence.map((e) => `Your upload: ${e.file_name}${e.customer_description ? ` (${e.customer_description})` : ""}`);
+  if (related) evidenceLines.unshift(`Bank record: matching charge, ${short(related)}`);
+  evidenceLines.unshift(`Bank record: ${short(txn)}`);
 
   return {
     dispute_category: categoryLabel,

@@ -1,7 +1,6 @@
 import { STATUS_LABELS } from "@/lib/domain/status";
-import { FIELD_LABELS } from "@/lib/domain/rules";
-import type { AiSummary, DisputeStatus, Evidence, StatusHistory } from "@/lib/domain/types";
-import { AiLabel, Badge, cx, dateTime } from "./ui";
+import type { DisputeStatus, Evidence, StatusHistory } from "@/lib/domain/types";
+import { Badge, cx, dateTime } from "./ui";
 
 const ACTION_LABELS: Record<string, string> = {
   create: "Dispute started",
@@ -66,61 +65,7 @@ export function Progress({ status }: { status: DisputeStatus }) {
   );
 }
 
-export function SummaryView({ summary, source }: { summary: AiSummary; source: "ai" | "template" | null }) {
-  return (
-    <div className="space-y-3 text-sm">
-      <div className="flex items-center justify-between">
-        <div className="font-semibold">{summary.dispute_category}</div>
-        <AiLabel source={source} />
-      </div>
-      <Block title="Transaction">{summary.transaction_details}</Block>
-      <Block title="Customer explanation">{summary.customer_explanation}</Block>
-      <Block title="Supporting evidence">
-        <ul className="list-disc space-y-1 pl-4">
-          {summary.evidence_summary.map((e, i) => (
-            <li key={i}>{e}</li>
-          ))}
-        </ul>
-      </Block>
-      {summary.inconsistencies?.length > 0 && (
-        <Block title="Possible inconsistencies" tone="warn">
-          <ul className="list-disc pl-4">
-            {summary.inconsistencies.map((e, i) => (
-              <li key={i}>{e}</li>
-            ))}
-          </ul>
-        </Block>
-      )}
-      {summary.missing_information.length > 0 && (
-        <Block title="Missing information" tone="warn">
-          <ul className="list-disc pl-4">
-            {summary.missing_information.map((e, i) => (
-              <li key={i}>{FIELD_LABELS[e] ?? e}</li>
-            ))}
-          </ul>
-        </Block>
-      )}
-      <Block title="Recommended filing reason">{summary.recommended_filing_reason}</Block>
-      <Block title="Suggested next steps">
-        <ul className="list-disc pl-4">
-          {summary.suggested_next_steps.map((e, i) => (
-            <li key={i}>{e}</li>
-          ))}
-        </ul>
-      </Block>
-      <p className="text-[11px] text-ink-3">Sources: {summary.sources.join(", ")}</p>
-    </div>
-  );
-}
-
-function Block({ title, children, tone }: { title: string; children: React.ReactNode; tone?: "warn" }) {
-  return (
-    <div className={cx("rounded-xl p-3", tone === "warn" ? "bg-accent-soft" : "bg-paper")}>
-      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">{title}</div>
-      <div className="text-ink">{children}</div>
-    </div>
-  );
-}
+export { SummaryView } from "./summary-view";
 
 export function EvidenceItem({
   e,
