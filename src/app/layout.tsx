@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "DisputeMate", template: "%s · DisputeMate" },
-  description: "Guided transaction disputes for digital banking customers. IS419 Group 5 prototype.",
+  description: "Guided transaction disputes for digital banking customers.",
 };
 
 export const viewport: Viewport = {

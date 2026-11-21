@@ -43,12 +43,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
       <form action={tryAsGuest} className="mt-5">
         <button className="btn-secondary w-full">Fresh guest customer</button>
-        <p className="mt-2 text-center text-xs text-ink-3">A new empty-history account with sample transactions.</p>
+        <p className="mt-2 text-center text-xs text-ink-3">A new customer account with recent transactions.</p>
       </form>
-
-      <p className="mt-8 rounded-xl border border-line bg-card p-3 text-xs text-ink-3">
-        Prototype only. Bank data and filings are simulated and no money moves.
-      </p>
     </main>
   );
 }

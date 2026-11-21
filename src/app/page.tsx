@@ -39,7 +39,6 @@ export default async function Landing() {
               Finish setup
             </Link>
           )}
-          <p className="text-center text-[11px] text-white/50">IS419 Group 5 prototype. Simulated bank data only, no real payments.</p>
         </div>
       </div>
     </main>

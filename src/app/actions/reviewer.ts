@@ -123,7 +123,7 @@ async function fileDispute(admin: ReturnType<typeof createAdminClient>, dispute:
   for (let attempt = 0; attempt < 3; attempt++) {
     const reference = generateSubmissionReference();
     try {
-      await transition(admin, dispute, "file", "system", actorId, `Simulated filing, reference ${reference}`, {
+      await transition(admin, dispute, "file", "system", actorId, `Dispute filed, reference ${reference}`, {
         submission_reference: reference,
         submitted_at: new Date().toISOString(),
       });

@@ -13,7 +13,7 @@ import type { Dispute, DisputeCategory, Evidence, RoutingRule, StatusHistory, Tr
 export const metadata = { title: "Review dispute" };
 
 const NOTICE_TEXT: Record<string, string> = {
-  approve: "Approved. The simulated filing ran and the customer was notified.",
+  approve: "Approved. The dispute was filed and the customer was notified.",
   reject: "Rejected. The customer was notified with your explanation.",
   request_info: "Request sent to the customer.",
   return_for_correction: "Returned to the customer for correction.",

@@ -21,7 +21,7 @@ export default async function ReviewDashboard() {
 
   return (
     <div>
-      <PageTitle title={`Hello, ${user.name.split(" ")[0] || "reviewer"}`} subtitle="Every MVP filing needs your approval. AI output is advisory only." />
+      <PageTitle title={`Hello, ${user.name.split(" ")[0] || "reviewer"}`} subtitle="Every filing needs your approval. AI output is advisory only." />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Pending review" value={all.filter((d) => d.status === "pending_review").length} tone="accent" />
         <Stat label="Awaiting customer info" value={all.filter((d) => d.status === "info_required").length} />
