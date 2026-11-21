@@ -10,11 +10,12 @@ import type { AppUser, UserRole } from "@/lib/domain/types";
 export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
   if (!isConfigured()) return null;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await supabase.from("users").select("*").eq("user_id", user.id).single();
+  // getClaims verifies the session JWT locally when the project uses
+  // asymmetric signing keys, saving a round trip to Supabase Auth.
+  const { data: auth } = await supabase.auth.getClaims();
+  const userId = auth?.claims?.sub;
+  if (!userId) return null;
+  const { data } = await supabase.from("users").select("*").eq("user_id", userId).single();
   return (data as AppUser) ?? null;
 });
 
