@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { signedUrl } from "@/lib/evidence";
 import { addNote, assignToMe, escalateToFraud, retryFiling, reviewAction, updateCategory } from "@/app/actions/reviewer";
 import { EvidenceItem, SummaryView, Timeline } from "@/components/dispute-parts";
-import { Badge, Card, cx, dateTime, money, Notice, PageTitle, Row, SectionTitle, StatusBadge } from "@/components/ui";
+import { Badge, Card, cx, dateTime, money, Notice, PageTitle, Row, StatusBadge } from "@/components/ui";
 import { allowedActions } from "@/lib/domain/status";
 import { CATEGORY_QUESTIONS } from "@/lib/domain/rules";
 import { daysUntil } from "@/lib/domain/routing";
@@ -58,6 +59,16 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
   const days = daysUntil(d.filing_deadline);
   const questions = d.dispute_category ? CATEGORY_QUESTIONS[d.dispute_category] : [];
 
+  const TABS = [
+    ["overview", "Overview"],
+    ["customer", "Customer"],
+    ["ai", "AI summary"],
+    ["evidence", `Evidence${evidence.length ? ` (${evidence.length})` : ""}`],
+    ["history", "History"],
+    ["notes", `Notes${notes.length ? ` (${notes.length})` : ""}`],
+  ] as const;
+  const tab = TABS.some(([k]) => k === sp.tab) ? String(sp.tab) : "overview";
+
   return (
     <div>
       <PageTitle
@@ -82,62 +93,101 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
         )}
       </div>
 
+      {d.scam_indicators.length > 0 && (
+        <Card className="mb-4 border-[#efc4be] bg-danger-soft/50">
+          <div className="text-sm font-semibold text-danger">Scam indicators (deterministic checks)</div>
+          <ul className="mt-1 list-disc pl-5 text-sm">
+            {d.scam_indicators.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-ink-2">Escalate to the fraud team if a scam is suspected. The system makes no fraud or liability decision.</p>
+        </Card>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-4">
-          {d.scam_indicators.length > 0 && (
-            <Card className="border-[#efc4be] bg-danger-soft/50">
-              <div className="text-sm font-semibold text-danger">Scam indicators (deterministic checks)</div>
-              <ul className="mt-1 list-disc pl-5 text-sm">
-                {d.scam_indicators.map((s) => (
-                  <li key={s}>{s}</li>
-                ))}
-              </ul>
-              <p className="mt-2 text-xs text-ink-2">Escalate to the fraud team if a scam is suspected. The system makes no fraud or liability decision.</p>
-            </Card>
+        <div className="min-w-0 space-y-4">
+          <nav className="flex gap-1 overflow-x-auto rounded-xl bg-card p-1 text-xs font-semibold [scrollbar-width:none]" aria-label="Case sections">
+            {TABS.map(([k, l]) => (
+              <Link
+                key={k}
+                href={`/review/disputes/${id}?tab=${k}`}
+                scroll={false}
+                aria-current={tab === k ? "page" : undefined}
+                className={cx("flex-1 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-center",tab === k ? "bg-brand text-white" : "text-ink-3 hover:bg-paper")}
+              >
+                {l}
+              </Link>
+            ))}
+          </nav>
+
+          {tab === "overview" && (
+            <>
+              <Card>
+                <div className="mb-2 text-sm font-semibold">Transaction (bank record)</div>
+                <Row label="Merchant">{txn.merchant_name}</Row>
+                <Row label="Amount">{money(txn.amount, txn.currency)}</Row>
+                <Row label="Date">{dateTime(txn.transaction_date)}</Row>
+                <Row label="Method / status">{txn.payment_method.toUpperCase()} · {txn.transaction_status}</Row>
+                <Row label="Reference"><span className="font-mono text-xs">{txn.reference_number}</span></Row>
+                {related && (
+                  <Row label="Matching charge">
+                    {money(related.amount, related.currency)} · {dateTime(related.transaction_date)} · <span className="font-mono text-xs">{related.reference_number}</span>
+                  </Row>
+                )}
+              </Card>
+              <Card>
+                <div className="mb-2 text-sm font-semibold">Routing recommendation (rules engine)</div>
+                <Row label="Rule">{rule?.name ?? "No matching rule"}</Row>
+                <Row label="Reason code">{d.recommended_reason_code ?? "None"}</Row>
+                <Row label="Queue">{rule?.review_queue ?? "disputes"}</Row>
+                <Row label="Filing deadline">
+                  <span className={cx(days !== null && days <= 14 && "text-danger")}>
+                    {d.filing_deadline ? `${dateTime(d.filing_deadline, "date")} (${days} days)` : "Not determined"}
+                  </span>
+                </Row>
+                {d.routing_explanation && <p className="mt-2 text-xs text-ink-2">{d.routing_explanation}</p>}
+                {d.ai_recommended_category && (
+                  <p className="mt-2 text-xs text-ai">
+                    ✦ AI suggested category: {d.ai_recommended_category} ({Math.round((d.ai_category_confidence ?? 0) * 100)}% confidence). {d.ai_category_reasoning}
+                  </p>
+                )}
+              </Card>
+            </>
           )}
 
-          <Card>
-            <div className="mb-2 text-sm font-semibold">Transaction (bank record)</div>
-            <Row label="Merchant">{txn.merchant_name}</Row>
-            <Row label="Amount">{money(txn.amount, txn.currency)}</Row>
-            <Row label="Date">{dateTime(txn.transaction_date)}</Row>
-            <Row label="Method / status">{txn.payment_method.toUpperCase()} · {txn.transaction_status}</Row>
-            <Row label="Reference"><span className="font-mono text-xs">{txn.reference_number}</span></Row>
-            {related && (
-              <Row label="Matching charge">
-                {money(related.amount, related.currency)} · {dateTime(related.transaction_date)} · <span className="font-mono text-xs">{related.reference_number}</span>
-              </Row>
-            )}
-          </Card>
-
-          <Card>
-            <div className="mb-2 text-sm font-semibold">Customer</div>
-            <Row label="Name">{custR.data?.name}</Row>
-            <Row label="Email">{custR.data?.email}</Row>
-            <Row label="Customer ID"><span className="font-mono text-[10px]">{d.user_id}</span></Row>
-            <div className="mt-3 text-sm font-semibold">Customer explanation</div>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-ink-2">{d.customer_description || "None"}</p>
-            {questions.length > 0 && (
-              <div className="mt-3 space-y-1 text-sm">
-                {questions.map((q) => (
-                  <div key={q.id} className="flex justify-between gap-4">
-                    <span className="text-ink-3">{q.label}</span>
-                    <span className="font-semibold capitalize">{d.category_answers[q.id] ?? "Not answered"}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {d.ai_summary && (
+          {tab === "customer" && (
             <Card>
-              <SummaryView summary={d.ai_summary} source={d.ai_summary_source} />
+              <div className="mb-2 text-sm font-semibold">Customer</div>
+              <Row label="Name">{custR.data?.name}</Row>
+              <Row label="Email">{custR.data?.email}</Row>
+              <Row label="Customer ID"><span className="font-mono text-[10px]">{d.user_id}</span></Row>
+              <div className="mt-3 text-sm font-semibold">Customer explanation</div>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-ink-2">{d.customer_description || "None"}</p>
+              {questions.length > 0 && (
+                <div className="mt-3 space-y-1 text-sm">
+                  {questions.map((q) => (
+                    <div key={q.id} className="flex justify-between gap-4">
+                      <span className="text-ink-3">{q.label}</span>
+                      <span className="font-semibold capitalize">{d.category_answers[q.id] ?? "Not answered"}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           )}
 
-          <div>
-            <SectionTitle>Original evidence</SectionTitle>
-            {evidence.length ? (
+          {tab === "ai" &&
+            (d.ai_summary ? (
+              <Card>
+                <SummaryView summary={d.ai_summary} source={d.ai_summary_source} />
+              </Card>
+            ) : (
+              <div className="card p-4 text-sm text-ink-3">No summary was generated for this case.</div>
+            ))}
+
+          {tab === "evidence" &&
+            (evidence.length ? (
               <ul className="space-y-2">
                 {evidence.map((e) => (
                   <EvidenceItem key={e.evidence_id} e={e} url={urls[e.evidence_id]}>
@@ -147,36 +197,36 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
               </ul>
             ) : (
               <div className="card p-4 text-sm text-ink-3">No uploads. Bank transaction records are attached automatically.</div>
-            )}
-          </div>
+            ))}
 
-          <div>
-            <SectionTitle>Status history</SectionTitle>
+          {tab === "history" && (
             <Card>
               <Timeline history={history} showInternal />
             </Card>
-          </div>
+          )}
+
+          {tab === "notes" && (
+            <Card>
+              <div className="mb-2 text-sm font-semibold">Internal notes</div>
+              <ul className="mb-3 space-y-2">
+                {notes.map((n) => (
+                  <li key={n.note_id} className="rounded-lg bg-paper p-2 text-sm">
+                    <div className="whitespace-pre-wrap">{n.body}</div>
+                    <div className="mt-1 text-[11px] text-ink-3">{n.author?.name} · {dateTime(n.created_at)}</div>
+                  </li>
+                ))}
+                {!notes.length && <li className="text-xs text-ink-3">No notes yet. Notes are never shown to the customer.</li>}
+              </ul>
+              <form action={addNote} className="space-y-2">
+                <input type="hidden" name="dispute_id" value={id} />
+                <textarea name="body" rows={2} className="input" placeholder="Add an investigation note" />
+                <button className="btn-secondary w-full">Add note</button>
+              </form>
+            </Card>
+          )}
         </div>
 
-        <div className="space-y-4">
-          <Card>
-            <div className="mb-2 text-sm font-semibold">Routing recommendation (rules engine)</div>
-            <Row label="Rule">{rule?.name ?? "No matching rule"}</Row>
-            <Row label="Reason code">{d.recommended_reason_code ?? "None"}</Row>
-            <Row label="Queue">{rule?.review_queue ?? "disputes"}</Row>
-            <Row label="Filing deadline">
-              <span className={cx(days !== null && days <= 14 && "text-danger")}>
-                {d.filing_deadline ? `${dateTime(d.filing_deadline, "date")} (${days} days)` : "Not determined"}
-              </span>
-            </Row>
-            {d.routing_explanation && <p className="mt-2 text-xs text-ink-2">{d.routing_explanation}</p>}
-            {d.ai_recommended_category && (
-              <p className="mt-2 text-xs text-ai">
-                ✦ AI suggested category: {d.ai_recommended_category} ({Math.round((d.ai_category_confidence ?? 0) * 100)}% confidence). {d.ai_category_reasoning}
-              </p>
-            )}
-          </Card>
-
+        <div className="space-y-4 self-start lg:sticky lg:top-4">
           {d.status === "pending_review" && (
             <Card>
               <form action={updateCategory} className="flex gap-2">
@@ -269,23 +319,6 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
             </Card>
           )}
 
-          <Card>
-            <div className="mb-2 text-sm font-semibold">Internal notes</div>
-            <ul className="mb-3 space-y-2">
-              {notes.map((n) => (
-                <li key={n.note_id} className="rounded-lg bg-paper p-2 text-sm">
-                  <div className="whitespace-pre-wrap">{n.body}</div>
-                  <div className="mt-1 text-[11px] text-ink-3">{n.author?.name} · {dateTime(n.created_at)}</div>
-                </li>
-              ))}
-              {!notes.length && <li className="text-xs text-ink-3">No notes yet. Notes are never shown to the customer.</li>}
-            </ul>
-            <form action={addNote} className="space-y-2">
-              <input type="hidden" name="dispute_id" value={id} />
-              <textarea name="body" rows={2} className="input" placeholder="Add an investigation note" />
-              <button className="btn-secondary w-full">Add note</button>
-            </form>
-          </Card>
         </div>
       </div>
     </div>

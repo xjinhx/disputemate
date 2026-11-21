@@ -210,5 +210,5 @@ export async function addNote(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim().slice(0, 4000);
   const { staff, admin } = await loadForStaff(disputeId);
   if (body) await admin.from("reviewer_notes").insert({ dispute_id: disputeId, author_id: staff.user_id, body });
-  redirect(page(disputeId));
+  redirect(page(disputeId, "?tab=notes"));
 }
