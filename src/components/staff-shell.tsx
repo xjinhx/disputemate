@@ -36,7 +36,7 @@ export function StaffShell({ user, children, pending }: { user: AppUser; childre
           <div className="font-semibold text-ink-2">{user.name}</div>
           <div className="capitalize">{user.role}</div>
           <form action={signOut} className="mt-2">
-            <button className="font-semibold text-brand-2">Sign out</button>
+            <button className="font-semibold text-brand-2">Switch profile</button>
           </form>
         </div>
       </aside>

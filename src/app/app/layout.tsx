@@ -22,7 +22,7 @@ export default async function CustomerLayout({ children }: LayoutProps<"/app">) 
             DisputeMate
           </Link>
           <form action={signOut}>
-            <button className="text-xs font-medium text-white/80 hover:text-white">Sign out</button>
+            <button className="text-xs font-medium text-white/80 hover:text-white">Switch profile</button>
           </form>
         </div>
       </header>

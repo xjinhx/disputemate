@@ -31,10 +31,7 @@ export default async function Landing() {
           {isConfigured() ? (
             <>
               <Link href="/login" className="w-full bg-accent text-brand hover:opacity-90 inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold">
-                Sign in
-              </Link>
-              <Link href="/login?mode=signup" className="block text-center text-sm font-medium text-white/80">
-                New here? Create a demo account
+                Choose a profile
               </Link>
             </>
           ) : (

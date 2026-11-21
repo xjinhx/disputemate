@@ -65,6 +65,52 @@ export async function tryAsGuest() {
   redirect("/app");
 }
 
+/** Demo profiles anyone can switch to from the login page. Prototype only. */
+const PROFILES = {
+  customer: { local: "customer", name: "Tan Mei Ling" },
+  reviewer: { local: "reviewer", name: "Rahul Nair" },
+  administrator: { local: "admin", name: "Siti Rahman" },
+} as const satisfies Record<UserRole, { local: string; name: string }>;
+
+/**
+ * One-click sign-in to a demo profile, no password. Mints a one-time
+ * magic-link token with the service role and redeems it server side. Creates
+ * the account (with its role) on first use, so the seed script is optional.
+ */
+export async function signInAsProfile(formData: FormData) {
+  const role = String(formData.get("role") ?? "") as UserRole;
+  const profile = PROFILES[role as keyof typeof PROFILES];
+  if (!profile) redirect("/login?error=" + encodeURIComponent("Unknown profile."));
+  const email = `${profile.local}@${process.env.DEMO_EMAIL_DOMAIN ?? "demo.disputemate.app"}`;
+  const admin = createAdminClient();
+
+  let link = await admin.auth.admin.generateLink({ type: "magiclink", email });
+  if (link.error) {
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password: crypto.randomUUID() + crypto.randomUUID(),
+      email_confirm: true,
+      user_metadata: { name: profile.name },
+    });
+    if (createError || !created.user) redirect("/login?error=" + encodeURIComponent(createError?.message ?? "Could not create profile"));
+    await admin.from("users").update({ role, name: profile.name }).eq("user_id", created.user.id);
+    link = await admin.auth.admin.generateLink({ type: "magiclink", email });
+  }
+  const tokenHash = link.data.properties?.hashed_token;
+  if (link.error || !tokenHash) redirect("/login?error=" + encodeURIComponent(link.error?.message ?? "Sign-in failed"));
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
+  if (error || !data.user) redirect("/login?error=" + encodeURIComponent(error?.message ?? "Sign-in failed"));
+
+  try {
+    await audit(admin, data.user.id, "auth.sign_in", "user", data.user.id);
+  } catch {
+    /* audit is best-effort */
+  }
+  redirect(homeFor(role));
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
