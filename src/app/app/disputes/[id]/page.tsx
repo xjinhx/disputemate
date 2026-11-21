@@ -14,6 +14,7 @@ import {
   uploadEvidence,
 } from "@/app/actions/customer";
 import { CategoryForm } from "@/components/category-form";
+import { SubmitButton } from "@/components/submit-button";
 import { EvidenceItem, Progress, SummaryView, Timeline } from "@/components/dispute-parts";
 import { AiLabel, Card, cx, dateTime, money, Notice, PageTitle, Row, SectionTitle, StatusBadge } from "@/components/ui";
 import { customerCanEdit, STATUS_EXPLANATIONS } from "@/lib/domain/status";
@@ -79,7 +80,7 @@ export default async function DisputePage({ params, searchParams }: PageProps<"/
           {step === "details" && (
             <DetailsStep dispute={dispute} txn={txn} categories={categories} sp={sp} userId={user.user_id} />
           )}
-          {step === "evidence" && <EvidenceStep dispute={dispute} txn={txn} evidence={evidence} urls={urls} error={sp.error} />}
+          {step === "evidence" && <EvidenceStep dispute={dispute} txn={txn} evidence={evidence} urls={urls} error={sp.error} uploaded={Boolean(sp.uploaded)} />}
           {step === "review" && <ReviewStep dispute={dispute} txn={txn} evidence={evidence} catLabel={catLabel} missing={sp.missing} />}
         </>
       )}
@@ -175,12 +176,14 @@ async function EvidenceStep({
   evidence,
   urls,
   error,
+  uploaded,
 }: {
   dispute: Dispute;
   txn: Transaction;
   evidence: Evidence[];
   urls: Record<string, string | null>;
   error?: string | string[];
+  uploaded?: boolean;
 }) {
   const routing = await computeRouting(createAdminClient(), dispute, txn);
   const needed = routing.requiredFields.filter((f) => f !== "customer_description");
@@ -190,6 +193,7 @@ async function EvidenceStep({
     <div>
       {dispute.status === "info_required" && <InfoRequest dispute={dispute} />}
       {error && <Notice tone="error">{String(error)}</Notice>}
+      {uploaded && !error && <Notice tone="ok">Done. Your file is uploaded and listed under Your files below.</Notice>}
 
       <Card>
         <div className="text-sm font-semibold">Checklist</div>
@@ -228,7 +232,9 @@ async function EvidenceStep({
         />
         <input name="note" placeholder="What is this file? (optional)" className="input" maxLength={500} />
         <p className="text-xs text-ink-3">Receipts, screenshots or emails. PNG, JPG, WEBP, PDF or TXT up to 4 MB.</p>
-        <button className="btn-secondary w-full">Upload</button>
+        <SubmitButton className="btn-secondary w-full" pendingText="Uploading and reading your file…">
+          Upload
+        </SubmitButton>
       </form>
 
       {evidence.length > 0 && (
@@ -252,7 +258,9 @@ async function EvidenceStep({
 
       <form action={generateSummary} className="mt-6">
         <input type="hidden" name="dispute_id" value={dispute.dispute_id} />
-        <button className="btn-primary w-full">Prepare my dispute summary</button>
+        <SubmitButton className="btn-primary w-full" pendingText="Preparing your summary…">
+          Prepare my dispute summary
+        </SubmitButton>
         <p className="mt-2 text-center text-xs text-ink-3">We will draft a summary for you to check. Nothing is sent yet.</p>
       </form>
     </div>
@@ -279,7 +287,9 @@ function ReviewStep({
         <p className="text-sm">Your summary has not been prepared yet, or your details changed since it was made.</p>
         <form action={generateSummary} className="mt-3">
           <input type="hidden" name="dispute_id" value={dispute.dispute_id} />
-          <button className="btn-primary w-full">Prepare my dispute summary</button>
+          <SubmitButton className="btn-primary w-full" pendingText="Preparing your summary…">
+            Prepare my dispute summary
+          </SubmitButton>
         </form>
       </Card>
     );

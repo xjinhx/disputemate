@@ -182,6 +182,15 @@ export async function uploadEvidence(formData: FormData) {
   const problem = validateUpload(file);
   if (problem) redirect(back(disputeId, "evidence", `&error=${encodeURIComponent(problem)}`));
 
+  // The same file twice is almost always a double click, so say so instead of adding a copy.
+  const { count: already } = await admin
+    .from("evidence")
+    .select("evidence_id", { count: "exact", head: true })
+    .eq("dispute_id", disputeId)
+    .eq("file_name", file!.name.slice(0, 200))
+    .eq("file_size", file!.size);
+  if (already) redirect(back(disputeId, "evidence", `&error=${encodeURIComponent("This file is already uploaded.")}`));
+
   const bytes = Buffer.from(await file!.arrayBuffer());
   const path = `${user.user_id}/${disputeId}/${crypto.randomUUID()}-${safeFileName(file!.name)}`;
   const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, { contentType: file!.type });
@@ -224,7 +233,7 @@ export async function uploadEvidence(formData: FormData) {
     )
     .eq("evidence_id", ev?.evidence_id);
   await admin.from("disputes").update({ ai_summary: null, ai_summary_source: null }).eq("dispute_id", disputeId);
-  redirect(back(disputeId, "evidence"));
+  redirect(back(disputeId, "evidence", "&uploaded=1"));
 }
 
 export async function removeEvidence(formData: FormData) {
