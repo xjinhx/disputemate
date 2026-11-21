@@ -191,37 +191,60 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
             </Card>
           )}
 
-          {actions.length > 0 && (
+          {actions.includes("approve") && (
             <Card>
               <div className="mb-2 text-sm font-semibold">Decision</div>
               <form action={reviewAction} className="space-y-2">
                 <input type="hidden" name="dispute_id" value={id} />
-                {(actions.includes("resolve") || actions.includes("reject_after_investigation")) && (
-                  <>
-                    <label className="label" htmlFor="decision">Outcome</label>
-                    <select id="decision" name="decision" className="input">
-                      <option>Resolved in customer&apos;s favour, refund issued</option>
-                      <option>Resolved in customer&apos;s favour, partial refund</option>
-                      <option>Resolved, merchant refunded customer directly</option>
-                    </select>
-                    <input name="next_steps" placeholder="Next steps for the customer (optional)" className="input" />
-                  </>
-                )}
                 <textarea
                   name="remarks"
                   rows={3}
-                  placeholder="Explanation (required for reject, info requests and outcomes). Customers can see this."
+                  placeholder="Explanation (required for reject and info requests). Customers can see this."
                   className="input"
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  {actions.includes("approve") && <button name="action" value="approve" className="btn-primary col-span-2">Approve and file</button>}
+                  <button name="action" value="approve" className="btn-primary col-span-2">Approve and file</button>
                   {actions.includes("request_info") && <button name="action" value="request_info" className="btn-secondary">Request info</button>}
                   {actions.includes("return_for_correction") && <button name="action" value="return_for_correction" className="btn-secondary">Return for correction</button>}
                   {actions.includes("reject") && <button name="action" value="reject" className="btn-danger col-span-2">Reject</button>}
-                  {actions.includes("start_investigation") && <button name="action" value="start_investigation" className="btn-primary col-span-2">Start investigation</button>}
+                </div>
+              </form>
+            </Card>
+          )}
+
+          {(actions.includes("resolve") || actions.includes("reject_after_investigation")) && (
+            <Card>
+              <div className="text-sm font-semibold">Record the outcome</div>
+              <p className="mb-3 mt-0.5 text-xs text-ink-3">
+                {d.status === "under_investigation" ? "Investigation in progress. Record the outcome when it concludes." : "Filed. Record the outcome once the merchant or card network responds."}
+              </p>
+              <form action={reviewAction} className="space-y-2">
+                <input type="hidden" name="dispute_id" value={id} />
+                <label className="label" htmlFor="decision">Outcome</label>
+                <select id="decision" name="decision" className="input">
+                  <option>Resolved in customer&apos;s favour, refund issued</option>
+                  <option>Resolved in customer&apos;s favour, partial refund</option>
+                  <option>Resolved, merchant refunded customer directly</option>
+                </select>
+                <input name="next_steps" placeholder="Next steps for the customer (optional)" className="input" />
+                <textarea name="remarks" rows={3} placeholder="Explanation (required). Customers can see this." className="input" />
+                <div className="grid grid-cols-2 gap-2">
                   {actions.includes("resolve") && <button name="action" value="resolve" className="btn-primary">Resolve</button>}
                   {actions.includes("reject_after_investigation") && <button name="action" value="reject_after_investigation" className="btn-danger">Close as rejected</button>}
                 </div>
+              </form>
+            </Card>
+          )}
+
+          {actions.includes("start_investigation") && (
+            <Card>
+              <div className="text-sm font-semibold">Need more evidence?</div>
+              <p className="mb-3 mt-0.5 text-xs text-ink-3">
+                Optional. Mark the case as under investigation while you contact the merchant or check authentication logs. The customer sees the status change.
+              </p>
+              <form action={reviewAction}>
+                <input type="hidden" name="dispute_id" value={id} />
+                <button name="action" value="start_investigation" className="btn-secondary w-full">Start investigation</button>
               </form>
             </Card>
           )}
