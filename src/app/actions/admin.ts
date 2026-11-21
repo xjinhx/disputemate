@@ -56,6 +56,15 @@ export async function saveDetection(formData: FormData) {
   redirect("/admin?saved=1");
 }
 
+export async function saveAiSwitch(formData: FormData) {
+  const admin = await requireAdmin();
+  const db = createAdminClient();
+  const enabled = formData.get("ai_enabled") === "on";
+  await db.from("system_settings").upsert({ key: "ai", value: { enabled }, updated_at: new Date().toISOString() });
+  await audit(db, admin.user_id, "settings.ai", "system_settings", null, { enabled });
+  redirect("/admin?saved=1");
+}
+
 export async function saveCategory(formData: FormData) {
   const admin = await requireAdmin();
   const db = createAdminClient();

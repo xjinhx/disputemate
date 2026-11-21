@@ -19,6 +19,18 @@ export function aiAvailable() {
   return Boolean(process.env.OPENAI_API_KEY);
 }
 
+/**
+ * True when the API key is set AND an administrator has not switched AI off
+ * (system_settings key "ai"). Switching it off falls every AI step back to the
+ * manual process; rules, routing and human approval are unaffected.
+ */
+export async function aiEnabled(admin: SupabaseClient | null): Promise<boolean> {
+  if (!aiAvailable()) return false;
+  if (!admin) return true;
+  const { data } = await admin.from("system_settings").select("value").eq("key", "ai").maybeSingle();
+  return (data?.value as { enabled?: boolean } | null)?.enabled !== false;
+}
+
 const SYSTEM = `You are DisputeMate's assistant inside a Singapore retail bank app. You help prepare transaction dispute paperwork.
 Rules you must follow:
 - Use ONLY the facts provided in the input. Never invent transaction details, dates, amounts, merchants or evidence.
@@ -68,7 +80,7 @@ export async function recommendCategory(
   description: string,
   selected: DisputeCategoryKey | null,
 ): Promise<z.infer<typeof CategorySchema> | null> {
-  if (!aiAvailable()) return null;
+  if (!(await aiEnabled(admin))) return null;
   const started = Date.now();
   try {
     const res = await client().responses.parse({
@@ -112,7 +124,7 @@ export async function processEvidence(
   txn: Transaction,
   file: { name: string; type: string; bytes: Buffer },
 ): Promise<z.infer<typeof EvidenceSchema> | null> {
-  if (!aiAvailable()) return null;
+  if (!(await aiEnabled(admin))) return null;
   const started = Date.now();
   const base64 = file.bytes.toString("base64");
 
@@ -188,7 +200,7 @@ export async function prepareSummary(
     missingFields: string[];
   },
 ): Promise<AiSummary | null> {
-  if (!aiAvailable()) return null;
+  if (!(await aiEnabled(admin))) return null;
   const started = Date.now();
   try {
     const res = await client().responses.parse({
@@ -236,7 +248,7 @@ export async function explainDecision(
   decision: string,
   reason: string,
 ): Promise<string | null> {
-  if (!aiAvailable()) return null;
+  if (!(await aiEnabled(admin))) return null;
   const started = Date.now();
   try {
     const res = await client().responses.create({

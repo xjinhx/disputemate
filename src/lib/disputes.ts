@@ -73,6 +73,12 @@ export async function loadDetectionSettings(admin: SupabaseClient): Promise<Dete
   };
 }
 
+/** Administrator switch for AI assistance (system_settings key "ai"). On unless explicitly disabled. */
+export async function loadAiSwitch(admin: SupabaseClient): Promise<boolean> {
+  const { data } = await admin.from("system_settings").select("value").eq("key", "ai").maybeSingle();
+  return (data?.value as { enabled?: boolean } | null)?.enabled !== false;
+}
+
 /**
  * Runs the deterministic detection rules for a customer and records new
  * alerts. Dismissed or confirmed alerts are never re-opened (dedupe key).

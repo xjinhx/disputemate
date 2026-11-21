@@ -18,7 +18,10 @@ interface Props {
 export function CategoryForm(p: Props) {
   const [category, setCategory] = useState<DisputeCategoryKey | null>(p.initialCategory);
   const [desc, setDesc] = useState(p.description);
+  const [merchantContacted, setMerchantContacted] = useState(p.answers.merchant_contacted ?? "");
   const questions = category ? CATEGORY_QUESTIONS[category] : [];
+  // Merchants resolve most issues when asked, so nudge (never block) before filing.
+  const showMerchantNudge = (category === "duplicate" || category === "goods_services") && merchantContacted === "no";
 
   return (
     <form action={p.action} className="space-y-5">
@@ -97,13 +100,26 @@ export function CategoryForm(p: Props) {
                 <div className="mt-2 flex gap-4 text-sm">
                   {["yes", "no"].map((v) => (
                     <label key={v} className="flex items-center gap-1.5 capitalize">
-                      <input type="radio" name={`q_${q.id}`} value={v} defaultChecked={p.answers[q.id] === v} className="accent-[#0f3d3e]" />
+                      <input
+                        type="radio"
+                        name={`q_${q.id}`}
+                        value={v}
+                        defaultChecked={p.answers[q.id] === v}
+                        onChange={() => q.id === "merchant_contacted" && setMerchantContacted(v)}
+                        className="accent-[#0f3d3e]"
+                      />
                       {v}
                     </label>
                   ))}
                 </div>
               ) : (
                 <input name={`q_${q.id}`} defaultValue={p.answers[q.id] ?? ""} className="input mt-2" />
+              )}
+              {q.id === "merchant_contacted" && showMerchantNudge && (
+                <p role="note" className="mt-3 rounded-lg bg-brand-soft p-3 text-xs text-ink-2">
+                  <span className="font-semibold">A quick message may be faster.</span> Merchants fix most issues when they are asked. You can
+                  still continue with this dispute if you prefer.
+                </p>
               )}
             </div>
           ))}

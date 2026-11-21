@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import { loadDetectionSettings } from "@/lib/disputes";
-import { saveDetection } from "@/app/actions/admin";
+import { loadAiSwitch, loadDetectionSettings } from "@/lib/disputes";
+import { saveAiSwitch, saveDetection } from "@/app/actions/admin";
 import { Card, Notice, PageTitle, SectionTitle, Stat } from "@/components/ui";
 import { STATUS_LABELS } from "@/lib/domain/status";
 import type { DisputeStatus } from "@/lib/domain/types";
@@ -12,10 +12,11 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   await requireAdmin();
   const sp = await searchParams;
   const db = createAdminClient();
-  const [{ data: disputes }, { data: ai }, settings, { count: alertsTotal }, { count: alertsDismissed }] = await Promise.all([
+  const [{ data: disputes }, { data: ai }, settings, aiOn, { count: alertsTotal }, { count: alertsDismissed }] = await Promise.all([
     db.from("disputes").select("status, dispute_category, ai_recommended_category, ai_summary_source"),
     db.from("ai_requests").select("task, succeeded, latency_ms").order("created_at", { ascending: false }).limit(500),
     loadDetectionSettings(db),
+    loadAiSwitch(db),
     db.from("dispute_alerts").select("alert_id", { count: "exact", head: true }),
     db.from("dispute_alerts").select("alert_id", { count: "exact", head: true }).eq("status", "dismissed"),
   ]);
@@ -52,6 +53,20 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
         <Stat label="Needs more info" value={ds.length ? `${Math.round((info / ds.length) * 100)}%` : "n/a"} />
         <Stat label="AI configured" value={process.env.OPENAI_API_KEY ? "Yes" : "No"} tone={process.env.OPENAI_API_KEY ? undefined : "danger"} />
       </div>
+
+      <SectionTitle>AI assistance</SectionTitle>
+      <Card>
+        <form action={saveAiSwitch} className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" name="ai_enabled" defaultChecked={aiOn} /> AI assistance is {aiOn ? "on" : "off"}
+          </label>
+          <button className="btn-primary">Save</button>
+          <p className="basis-full text-xs text-ink-2">
+            Turn this off to run the manual process: category suggestions, evidence reading, summaries and plain-language decisions stop, and
+            customers get the plain template summary. Rules, routing, deadlines and human approval are not affected.
+          </p>
+        </form>
+      </Card>
 
       <SectionTitle>Detection rules</SectionTitle>
       <Card>
