@@ -61,7 +61,6 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
 
   const TABS = [
     ["overview", "Overview"],
-    ["customer", "Customer"],
     ["ai", "AI summary"],
     ["evidence", `Evidence${evidence.length ? ` (${evidence.length})` : ""}`],
     ["history", "History"],
@@ -124,6 +123,24 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
           {tab === "overview" && (
             <>
               <Card>
+                <div className="mb-2 text-sm font-semibold">Customer</div>
+                <Row label="Name">{custR.data?.name}</Row>
+                <Row label="Email">{custR.data?.email}</Row>
+                <Row label="Customer ID"><span className="font-mono text-[10px]">{d.user_id}</span></Row>
+                <div className="mt-3 text-sm font-semibold">Customer explanation</div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-ink-2">{d.customer_description || "None"}</p>
+                {questions.length > 0 && (
+                  <div className="mt-3 space-y-1 text-sm">
+                    {questions.map((q) => (
+                      <div key={q.id} className="flex justify-between gap-4">
+                        <span className="text-ink-3">{q.label}</span>
+                        <span className="font-semibold capitalize">{d.category_answers[q.id] ?? "Not answered"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+              <Card>
                 <div className="mb-2 text-sm font-semibold">Transaction (bank record)</div>
                 <Row label="Merchant">{txn.merchant_name}</Row>
                 <Row label="Amount">{money(txn.amount, txn.currency)}</Row>
@@ -154,27 +171,6 @@ export default async function ReviewDisputePage({ params, searchParams }: PagePr
                 )}
               </Card>
             </>
-          )}
-
-          {tab === "customer" && (
-            <Card>
-              <div className="mb-2 text-sm font-semibold">Customer</div>
-              <Row label="Name">{custR.data?.name}</Row>
-              <Row label="Email">{custR.data?.email}</Row>
-              <Row label="Customer ID"><span className="font-mono text-[10px]">{d.user_id}</span></Row>
-              <div className="mt-3 text-sm font-semibold">Customer explanation</div>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-ink-2">{d.customer_description || "None"}</p>
-              {questions.length > 0 && (
-                <div className="mt-3 space-y-1 text-sm">
-                  {questions.map((q) => (
-                    <div key={q.id} className="flex justify-between gap-4">
-                      <span className="text-ink-3">{q.label}</span>
-                      <span className="font-semibold capitalize">{d.category_answers[q.id] ?? "Not answered"}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
           )}
 
           {tab === "ai" &&
